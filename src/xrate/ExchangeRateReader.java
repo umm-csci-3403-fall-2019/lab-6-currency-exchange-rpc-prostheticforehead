@@ -3,6 +3,8 @@ package xrate;
 import java.io.*;
 import java.net.URL;
 import java.util.Properties;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 
 /**
  * Provide access to basic currency exchange rate services.
@@ -10,7 +12,7 @@ import java.util.Properties;
 public class ExchangeRateReader {
 
     private String accessKey;
-
+    private String url;
     /**
      * Construct an exchange rate reader using the given base URL. All requests
      * will then be relative to that URL. If, for example, your source is Xavier
@@ -31,7 +33,7 @@ public class ExchangeRateReader {
          */
 
         // TODO Your code here
-
+        this.url = baseURL;
         // Reads the access keys from `etc/access_keys.properties`
         readAccessKeys();
     }
@@ -83,9 +85,28 @@ public class ExchangeRateReader {
      */
     public float getExchangeRate(String currencyCode, int year, int month, int day) throws IOException {
         // TODO Your code here
-
-        // Remove the next line when you've implemented this method.
-        throw new UnsupportedOperationException();
+        float exchangeRate = 0;
+        String yearString = Integer.toString(year);
+        String monthString = Integer.toString(month);
+        String dayString = Integer.toString(day);
+        if(monthString.length()<2){
+            monthString = "0" + monthString;
+        }
+        if(dayString.length()<2){
+            dayString = "0" + dayString;
+        }
+        if(this.url.equals("http://facultypages.morris.umn.edu/~mcphee/ExchangeRateData/")){
+            String uS = this.url;
+        }
+        String uS = this.url+yearString+monthString+dayString+"?"+"access_key="+ accessKey + "&symbols="+currencyCode;
+        URL url = new URL(uS);
+        InputStream inputStream = url.openStream();
+        JsonParser j = new JsonParser();
+        JsonObject jO = (JsonObject)j.parse(new InputStreamReader(inputStream));
+        exchangeRate = jO.get("rates").getAsFloat();
+        System.out.println("exchangeRate: " + exchangeRate);
+        inputStream.close();
+        return exchangeRate;
     }
 
     /**
