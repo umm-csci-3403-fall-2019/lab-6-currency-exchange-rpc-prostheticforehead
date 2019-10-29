@@ -3,8 +3,11 @@ package xrate;
 import java.io.*;
 import java.net.URL;
 import java.util.Properties;
+
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.google.gson.JsonPrimitive;
 
 /**
  * Provide access to basic currency exchange rate services.
@@ -83,30 +86,41 @@ public class ExchangeRateReader {
      * @return the desired exchange rate
      * @throws IOException if there are problems reading from the server
      */
-    public float getExchangeRate(String currencyCode, int year, int month, int day) throws IOException {
-        // TODO Your code here
+    public float actuallyGetExchangeRate(String fromCode, String yearString, String monthString, String dayString)  throws IOException {
+         return actuallyGetExchangeRate(fromCode, "EUR", yearString, monthString, dayString);
+    }
+
+    public float actuallyGetExchangeRate(String fromCode, String toCode, String yearString, String monthString, String dayString)  throws IOException {
+        float exchangeFrom;
+        float exchangeTo;
         float exchangeRate = 0;
-        String yearString = Integer.toString(year);
-        String monthString = Integer.toString(month);
-        String dayString = Integer.toString(day);
-        if(monthString.length()<2){
+        if (monthString.length() < 2) {
             monthString = "0" + monthString;
         }
-        if(dayString.length()<2){
+        if (dayString.length() < 2) {
             dayString = "0" + dayString;
         }
-        if(this.url.equals("http://facultypages.morris.umn.edu/~mcphee/ExchangeRateData/")){
-            String uS = this.url;
-        }
-        String uS = this.url+yearString+monthString+dayString+"?"+"access_key="+ accessKey + "&symbols="+currencyCode;
+        String uS = this.url + yearString + "-" + monthString + "-" + dayString + "?" + "access_key=" + accessKey;
         URL url = new URL(uS);
         InputStream inputStream = url.openStream();
         JsonParser j = new JsonParser();
-        JsonObject jO = (JsonObject)j.parse(new InputStreamReader(inputStream));
-        exchangeRate = jO.get("rates").getAsFloat();
-        System.out.println("exchangeRate: " + exchangeRate);
+        JsonObject jO = (JsonObject) j.parse(new InputStreamReader(inputStream));
+        JsonObject rates = jO.getAsJsonObject("rates");
+        exchangeFrom = rates.getAsJsonPrimitive(fromCode).getAsFloat();
+        exchangeTo = rates.getAsJsonPrimitive(toCode).getAsFloat();
+        System.out.println(exchangeFrom);
+        System.out.println(exchangeTo);
+
+        System.out.println("exchangeRate: " + exchangeFrom);
         inputStream.close();
-        return exchangeRate;
+        return exchangeFrom/exchangeTo;
+    }
+    public float getExchangeRate(String currencyCode, int year, int month, int day) throws IOException {
+        // TODO Your code here
+        String yearString = Integer.toString(year);
+        String monthString = Integer.toString(month);
+        String dayString = Integer.toString(day);
+        return actuallyGetExchangeRate(currencyCode, yearString, monthString, dayString);
     }
 
     /**
@@ -130,8 +144,9 @@ public class ExchangeRateReader {
             String fromCurrency, String toCurrency,
             int year, int month, int day) throws IOException {
         // TODO Your code here
-
-        // Remove the next line when you've implemented this method.
-        throw new UnsupportedOperationException();
+        String yearString = Integer.toString(year);
+        String monthString = Integer.toString(month);
+        String dayString = Integer.toString(day);
+        return actuallyGetExchangeRate(fromCurrency, toCurrency, yearString, monthString, dayString);
     }
 }
